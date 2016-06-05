@@ -1,0 +1,95 @@
+var TableRows = React.createClass({
+  render: function() {
+    return (
+      <tr>
+        <th scope="row" id="userText">{this.props.count}</th>
+        <th width="100px"><img src={this.props.avatar} id="userPic" alt="user avatar"></img></th>
+        <td id="userText"><a href={this.props.link}>{this.props.username}</a></td>
+        <td id="userText">{this.props.recent}</td>
+        <td id="userText">{this.props.alltime}</td>
+      </tr>
+    );
+  }
+});
+
+var UserInfo = React.createClass({
+  loadFromServer: function() {
+    $.ajax({
+      url: this.state.url,
+      dataType: 'json',
+      cache: false,
+      success: function(data) {
+        this.setState({data: data});
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error(this.props.url, status, err.toString());
+      }.bind(this)
+    });
+  },
+  recentSort: function() {
+    $("#recent").css("color", "green")
+    $("#allTime").css("color", "black")
+    this.setState({
+      recent: "Last 30 days \u25BC", allTime: "All Time", url: "https://fcctop100.herokuapp.com/api/fccusers/top/recent"
+    })
+  },
+  allTimeSort: function() {
+    $("#allTime").css("color", "green")
+    $("#recent").css("color", "black")
+    this.setState({
+      recent: "Last 30 days", allTime: "All Time \u25BC", url: "https://fcctop100.herokuapp.com/api/fccusers/top/alltime"
+    })
+  },
+  getInitialState: function() {
+    return {data: [], recent: "Last 30 days \u25BC", allTime:"All Time", url: "https://fcctop100.herokuapp.com/api/fccusers/top/recent"};
+  },
+  componentDidMount: function() {
+    this.loadFromServer();
+  },
+  componentWillUpdate: function() {
+    this.loadFromServer();
+  },
+  render: function() {
+    return (
+      <div className="container col-sm-8 col-sm-push-2">
+        <table className="table table-striped table-bordered" data-toggle="table">
+          <thead className="thead-inverse">
+            <tr>
+              <th>#</th>
+              <th>User Avatar</th>
+              <th>User Name</th>
+              <th id="recent" onClick={this.recentSort}>{this.state.recent}</th>
+              <th id="allTime" onClick={this.allTimeSort}>{this.state.allTime}</th>
+            </tr>
+          </thead>
+          <UserList data={this.state.data} />
+        </table>
+      </div>
+    );
+  }
+});
+
+var UserList = React.createClass({
+  render: function() {
+    var count = 0
+    var link = "";
+    var userNodes = this.props.data.map(function(data) {
+      count++;
+      link = "http://www.freecodecamp.com/"+data.username;
+      return (
+        <TableRows username={data.username} link={link} count={count} avatar={data.img} alltime={data.alltime} recent={data.recent}>
+        </TableRows>
+      );
+    });
+    return (
+      <tbody>
+        {userNodes}
+      </tbody>
+    );
+  }
+});
+
+ReactDOM.render(
+  <UserInfo />,
+  document.getElementById('content')
+);
